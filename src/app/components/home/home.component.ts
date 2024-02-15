@@ -24,59 +24,62 @@ export class HomeComponent implements OnInit {
       navigatorControl.mozGetUserMedia ||
       navigatorControl.msGetUserMedia ||
       navigatorControl.mediaDevices.getUserMedia).bind(navigatorControl);
-  
+
     navigatorControl.mediaDevices.enumerateDevices()
       .then((devices: MediaDeviceInfo[]) => {
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         const constraints: MediaStreamConstraints = {
           audio: false,
-          video: true 
+          video: true
         };
-  
+
         if (this.isMobile()) {
           constraints.video = { facingMode: 'environment' };
         } else {
-          constraints.video = {}; 
+          constraints.video = {};
         }
-  
+
         for (const device of videoDevices) {
-           
-          (constraints.video as MediaTrackConstraints).deviceId = { exact: device.deviceId }; 
+
+          (constraints.video as MediaTrackConstraints).deviceId = { exact: device.deviceId };
           navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
-              this.handleStream(stream);
+              const track = stream.getVideoTracks()[0];
+              const capabilities: any = track.getCapabilities();
+
+              console.log("Stream Video Tracks:", stream.getVideoTracks());
+              console.log("Focus Mode:", capabilities.focusMode);
+              console.log("Facing Mode:", capabilities.facingMode);
+
+              if (capabilities.focusMode && capabilities.facingMode &&
+                capabilities.focusMode.includes('continuous') &&
+                capabilities.facingMode.includes('environment')) {
+                this.handleStream(stream)
+                return
+              } else {
+                track.stop();
+              }
             })
             .catch(error => {
               console.error('Error accessing video device:', error);
             });
         }
-  
-        
-        delete (constraints.video as MediaTrackConstraints).deviceId; 
+
+
+        delete (constraints.video as MediaTrackConstraints).deviceId;
         navigator.mediaDevices.getUserMedia(constraints)
           .then(stream => {
-            const track = stream.getVideoTracks()[0];
-                const capabilities: any = track.getCapabilities();
 
-                console.log("Stream Video Tracks:", stream.getVideoTracks());
-                console.log("Focus Mode:", capabilities.focusMode);
-                console.log("Facing Mode:", capabilities.facingMode);
-
-                if (capabilities.focusMode && capabilities.facingMode &&
-                    capabilities.focusMode.includes('continuous') &&
-                    capabilities.facingMode.includes('environment')) {
-                    this.handleStream(stream)
-                    return
-                } else {
-                    track.stop();
-                }
+            this.handleStream(stream)
+            return
+          
           })
-          .catch(error => {
-            console.error('Error accessing video device:', error);
-          });
-      })
-      .catch((error: any) => {
-        console.error('Error enumerating devices:', error);
+      .catch(error => {
+        console.error('Error accessing video device:', error);
       });
+  })
+      .catch((error: any) => {
+  console.error('Error enumerating devices:', error);
+});
   }
 }
