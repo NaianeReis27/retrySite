@@ -21,25 +21,25 @@ export class AppComponent implements AfterViewInit {
   constructor(private location: Location) { }
 
   ngOnInit(): void {
-    setTimeout(() => {
-      const state: any = this.location.getState();
-      console.log(state?.navigationId)
-      if (state) {
-        this.locatedNumber = state.navigationId;
-      }
-      if (this.locatedNumber) {
-        this.location.historyGo(-this.locatedNumber)
-      }
-    }, 10000);
-    this.startTimer();
-  }
+  //   setTimeout(() => {
+  //     const state: any = this.location.getState();
+  //     console.log(state?.navigationId)
+  //     if (state) {
+  //       this.locatedNumber = state.navigationId;
+  //     }
+  //     if (this.locatedNumber) {
+  //       this.location.historyGo(-this.locatedNumber)
+  //     }
+  //   }, 10000);
+  //   this.startTimer();
+  // }
 
-  startTimer(): void {
-    setInterval(() => {
-      this.seconds++;
-    }, 1000);
+  // startTimer(): void {
+  //   setInterval(() => {
+  //     this.seconds++;
+  //   }, 1000);
+  // }
   }
-  
   ngAfterViewInit(): void {}
 
   onClick(): void {

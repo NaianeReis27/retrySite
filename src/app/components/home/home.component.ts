@@ -24,9 +24,10 @@ export class HomeComponent implements OnInit {
       const constraints: any = { audio: false, video: { width: { exact: 640 }, height: { exact: 640 * this.ratioFrame } }, };
       if (this.isMobile()) { constraints.video = { facingMode: 'enviroment', width: { exact: 640 * this.ratioFrame }, height: { exact: 640 }, }; }
       for (const device of videoDevices) {
+        console.log(device)
         constraints.video.deviceId = device.deviceId; navigator.mediaDevices.getUserMedia(constraints).then(stream => {
           const track = stream.getVideoTracks()[0]; const capabilities: any = track.getCapabilities(); console.log(capabilities)
-          if (capabilities.focusMode && capabilities.facingMode && capabilities.focusMode.includes('continuous') && capabilities.facingMode.includes('enviroment')) { this.handleStream(stream); console.log("camera suporta focusMode === 'continuous"); return } else { track.stop(); }
+          if (capabilities.focusMode && capabilities.facingMode && capabilities.focusMode.includes('continuous')) { this.handleStream(stream); console.log("camera suporta focusMode === 'continuous"); return } else { track.stop(); }
         })
       };
       delete constraints.video.deviceId;
