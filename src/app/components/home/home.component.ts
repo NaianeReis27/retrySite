@@ -18,20 +18,52 @@ export class HomeComponent implements OnInit {
 
   handleStream(stream: any) { setTimeout(() => { let video: any = document.getElementById('video'); video.setAttribute('autoplay', ''); video.setAttribute('muted', ''); video.setAttribute('playsinline', ''); video.srcObject = stream; this.streams = stream.getVideoTracks(); }, 1000); };
   startCamera() {
-    const navigatorControl: any = navigator; navigatorControl.getUserMedia = (navigatorControl as any).getUserMedia || (navigatorControl as any).webkitGetUserMedia || (navigatorControl as any).mozGetUserMedia || (navigatorControl as any).msGetUserMedia || (navigatorControl as any).mediaDevices.getUserMedia;
-    navigatorControl.mediaDevices.enumerateDevices().then((devices: any[]) => {
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      const constraints: any = { audio: false, video: { width: { exact: 640 }, height: { exact: 640 * this.ratioFrame } }, };
-      if (this.isMobile()) { constraints.video = { facingMode: 'enviroment', width: { exact: 640 * this.ratioFrame }, height: { exact: 640 }, }; }
-      for (const device of videoDevices) {
-        console.log(device)
-        constraints.video.deviceId = device.deviceId; navigator.mediaDevices.getUserMedia(constraints).then(stream => {
-          const track = stream.getVideoTracks()[0]; const capabilities: any = track.getCapabilities(); console.log(capabilities)
-          if (capabilities.focusMode && capabilities.facingMode && capabilities.focusMode.includes('continuous')) { this.handleStream(stream); console.log("camera suporta focusMode === 'continuous"); return } else { track.stop(); }
-        })
-      };
-      delete constraints.video.deviceId;
-      navigator.mediaDevices.getUserMedia(constraints).then(stream => this.handleStream(stream)).catch(console.log)
-    })
+    const navigatorControl: any = navigator;
+    navigatorControl.getUserMedia = (navigatorControl.getUserMedia ||
+      navigatorControl.webkitGetUserMedia ||
+      navigatorControl.mozGetUserMedia ||
+      navigatorControl.msGetUserMedia ||
+      navigatorControl.mediaDevices.getUserMedia).bind(navigatorControl);
+  
+    navigatorControl.mediaDevices.enumerateDevices()
+      .then((devices: MediaDeviceInfo[]) => {
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const constraints: MediaStreamConstraints = {
+          audio: false,
+          video: true 
+        };
+  
+        if (this.isMobile()) {
+          constraints.video = { facingMode: 'environment' }; // Assign the constraints object
+        } else {
+          constraints.video = {}; // Initialize as empty object
+        }
+  
+        for (const device of videoDevices) {
+           
+          (constraints.video as MediaTrackConstraints).deviceId = { exact: device.deviceId }; // Type assertion here
+  
+          navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+              this.handleStream(stream);
+            })
+            .catch(error => {
+              console.error('Error accessing video device:', error);
+            });
+        }
+  
+        // If no specific device is selected, try to get any available video stream
+        delete (constraints.video as MediaTrackConstraints).deviceId; // Type assertion here
+        navigator.mediaDevices.getUserMedia(constraints)
+          .then(stream => {
+            this.handleStream(stream);
+          })
+          .catch(error => {
+            console.error('Error accessing video device:', error);
+          });
+      })
+      .catch((error: any) => {
+        console.error('Error enumerating devices:', error);
+      });
   }
 }
