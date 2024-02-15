@@ -34,15 +34,14 @@ export class HomeComponent implements OnInit {
         };
   
         if (this.isMobile()) {
-          constraints.video = { facingMode: 'environment' }; // Assign the constraints object
+          constraints.video = { facingMode: 'environment' };
         } else {
-          constraints.video = {}; // Initialize as empty object
+          constraints.video = {}; 
         }
   
         for (const device of videoDevices) {
            
-          (constraints.video as MediaTrackConstraints).deviceId = { exact: device.deviceId }; // Type assertion here
-  
+          (constraints.video as MediaTrackConstraints).deviceId = { exact: device.deviceId }; 
           navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
               this.handleStream(stream);
@@ -52,11 +51,25 @@ export class HomeComponent implements OnInit {
             });
         }
   
-        // If no specific device is selected, try to get any available video stream
-        delete (constraints.video as MediaTrackConstraints).deviceId; // Type assertion here
+        
+        delete (constraints.video as MediaTrackConstraints).deviceId; 
         navigator.mediaDevices.getUserMedia(constraints)
           .then(stream => {
-            this.handleStream(stream);
+            const track = stream.getVideoTracks()[0];
+                const capabilities: any = track.getCapabilities();
+
+                console.log("Stream Video Tracks:", stream.getVideoTracks());
+                console.log("Focus Mode:", capabilities.focusMode);
+                console.log("Facing Mode:", capabilities.facingMode);
+
+                if (capabilities.focusMode && capabilities.facingMode &&
+                    capabilities.focusMode.includes('continuous') &&
+                    capabilities.facingMode.includes('environment')) {
+                    this.handleStream(stream)
+                    return
+                } else {
+                    track.stop();
+                }
           })
           .catch(error => {
             console.error('Error accessing video device:', error);
